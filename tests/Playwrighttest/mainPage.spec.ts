@@ -9,7 +9,6 @@ interface Elements {
     value: string;
   };
 }
-
 const elements: Elements[] = [
   {
     locator: (page: Page): Locator =>
@@ -94,15 +93,19 @@ const elements: Elements[] = [
   },
 ];
 
+const lightMods = ['light', 'dark'];
+
 test.describe('тесты главной страницы', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('https://playwright.dev/');
   });
   test('Проверка отображения элементов навигации хедера', async ({ page }) => {
     elements.forEach(({ locator, name }) => {
-      test.step(`Проверка отображения элемента ${name}`, async () => {
-        await expect.soft(locator(page)).toBeVisible();
-      });
+      if (name) {
+        test.step(`Проверка отображения элемента ${name}`, async () => {
+          await expect.soft(locator(page)).toBeVisible();
+        });
+      }
     });
   });
   test('Проверка названия элементов навигации хедера', async ({ page }) => {
@@ -126,6 +129,14 @@ test.describe('тесты главной страницы', () => {
   });
   test('Проверка переключения лайтмода', async ({ page }) => {
     await page.getByLabel('Switch between dark and light').click();
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await expect.soft(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  });
+  lightMods.forEach((value) => {
+    test(`Проверка стилей активного ${value} мода`, async ({ page }) => {
+      await page.evaluate((value) => {
+        document.querySelector('html')?.setAttribute('data-theme', value);
+      }, value);
+      await expect(page).toHaveScreenshot(`pageWith${value}Mode.png`);
+    });
   });
 });
